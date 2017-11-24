@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .box{
+            width: 1100px;
+            height: 620px;
+            display: flex;
+            align-items: flex-end;
+            flex-wrap: nowrap;
+        }
+        .col{
+            width: 10px;
+            background: #c7ccd1;
+            position: relative;
+            margin-right: 1px;
+        }
+        .col__top{
+            width: 10px;
+            height: 10px;
+            background: #000;
+            position: absolute;
+            top: -10px;
+            left: 0;
+        }
+        .curr{
+            background: red;
+        }
+        .curr__tow{
+            background: green;
+        }
+        .curr.curr__tow{
+            background: greenyellow;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <form>
+        <label> <input name="sort" type="radio" @click="select('bubbleSort')">冒泡排序</label>
+        <label> <input name="sort" type="radio" @click="select('cocktailBubbleSort')">定向冒泡排序</label>
+        <label> <input name="sort" type="radio" @click="select('selectSort')">选择排序</label>
+        <label> <input name="sort" type="radio" @click="select('insertSort')">插入排序</label>
+    </form>
+    <div class="box">
+        <div :key="item" class="col" v-for="(item,index) in items" :class="{'curr':index==a,'curr__tow':index==b}" :style="{height: (item*6)+'px'}">
+            <div class="col__top"></div>
+        </div>
+    </div>
+    <ul>
+        <li>红色：i</li>
+        <li>绿色：j</li>
+    </ul>
+</div>
+</body>
+<script src="https://cdn.bootcss.com/vue/2.2.1/vue.js"></script>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            times:[],
+            set:null,
+            items: [],
+            a:-1,
+            b:-1,
+            step:10,
+        },
+        methods: {
+            select(name){
+                this.clearTimer();
+                this[name]()
+            },
+            clearTimer(){
+                this.times.forEach((item)=>{
+                    clearTimeout(item)
+                })
+            },
+            change:function (items,a,b, time) {
+                this.times.push(setTimeout(()=>{
+                    this.$nextTick(()=>{
+                        this.items=JSON.parse(items)
+                        this.a=a
+                        this.b=b
+                    })
+                },time))
+            },
+            //冒泡排序
+            bubbleSort() {
+                var i=0,j=-1,time=0;
+                var items=Array.from(this.set)
+                var start=Date.now()
+                this.change(JSON.stringify(items),i,j,time+=this.step)
+                for(i=0;i< items.length;i++){
+                    for(j=0;j<i;j++){
+                        if(items[i]<items[j]){
+                            items[i]=items[i]+items[j]
+                            items[j]=items[i]-items[j]
+                            items[i]=items[i]-items[j]
+                        }
+                        this.change(JSON.stringify(items),i,j,time+=this.step)
+                    }
+                }
+                console.info(Date.now()-start)
+            },
+            //定向冒泡【鸡尾酒冒泡】
+            cocktailBubbleSort() {
+                var i=0,j=-1,time=0;
+                var items=Array.from(this.set)
+                console.time("定向冒泡排序")
+                this.change(JSON.stringify(items),i,j,time+=this.step)
+                var left=0,right=items.length-1
+                while(left<right){
+                    for(i=left;i<right;i++){
+                        if(items[i]>items[i+1]){
+                            items[i]=items[i]+items[i+1]
+                            items[i+1]=items[i]-items[i+1]
+                            items[i]=items[i]-items[i+1]
+                            this.change(JSON.stringify(items),i,j,time+=this.step)
+                        }
+                    }
+                    right--
+                    for(i=right;i>left;i--){
+                        if(items[i]<items[i-1]){
+                            items[i]=items[i]+items[i-1]
+                            items[i-1]=items[i]-items[i-1]
+                            items[i]=items[i]-items[i-1]
+                            this.change(JSON.stringify(items),i,j,time+=this.step)
+                        }
+                    }
+                    left++
+                }
+                console.timeEnd("定向冒泡排序")
+            },
+            //选择排序
+            selectSort(){
+                var i=0,j=-1,time=0;
+                var items=Array.from(this.set)
+                console.time("选择排序")
+                this.change(JSON.stringify(items),i,j,time+=this.step)
+                var min=0;
+                for(i=0;i<items.length-1;i++){
+                    min=i;
+                    for(j=i+1;j<items.length;j++){
+                        if(items[j]<items[min]){
+                            min=j;
+                        }
+                        this.change(JSON.stringify(items),i,j,time+=this.step)
+                    }
+                    if(min!=i){
+                        items[i]=items[i]+items[min]
+                        items[min]=items[i]-items[min]
+                        items[i]=items[i]-items[min]
+                    }
+                    this.change(JSON.stringify(items),i,min,time+=this.step)
+                }
+                console.timeEnd("选择排序")
+            },
+            //插入排序
+            insertSort(){
+                var i=0,j=-1,time=0;
+                let max=0
+                var items=Array.from(this.set)
+                this.change(JSON.stringify(items),i,j,time+=this.step)
+                console.time("插入排序")
+                for(i=1;i<items.length;i++){ //从索引1开始到最后
+                    j=i-1,max=items[i];//设置当前的最大值
+                    while (j>=0&&items[j]>max){ //如果当前左边有值大于max
+                        items[j+1]=items[j]//把大于的值向后移动
+                        j--
+                        this.change(JSON.stringify(items),i,j,time+=this.step)
+                    }
+                    items[j+1]=max
+                    this.change(JSON.stringify(items),i,j,time+=this.step)
+                }
+                console.timeEnd("插入排序")
+            }
+        },
+        mounted:function () {
+            this.set=new Set()
+            while (this.set.size<100){
+                this.set.add(Number.parseInt(Math.random()*100))
+            }
+            this.items=Array.from(this.set)
+        }
+    })
+    /*
+     document.write("<hr/>定向冒泡排序<hr/>")
+     */
+</script>
+</html>
